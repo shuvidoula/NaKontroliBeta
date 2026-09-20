@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">НА КОНТРОЛІ</title>
+  <rect width="512" height="512" rx="112" fill="#35432e"/>
+  <g fill="none" stroke="#f5f3ec" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M184 136h-48v48m192-48h48v48m0 144v48h-48m-144 0h-48v-48"/>
+    <path d="m195 253 42 42 83-88" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

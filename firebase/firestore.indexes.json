@@ -1,0 +1,9 @@
+{
+  "indexes": [
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "pending", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "createdAt", "order": "ASCENDING" }
+    ] }
+  ],
+  "fieldOverrides": []
+}

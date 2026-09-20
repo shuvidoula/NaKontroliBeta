@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#35432e">
+  <meta name="description" content="НА КОНТРОЛІ — особистий простір для задач. Працює локально, навіть без зв’язку.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="НА КОНТРОЛІ">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
+  <title>НА КОНТРОЛІ — твої задачі</title>
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./bootstrap.min.css">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./guide.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-mark" viewBox="0 0 32 32"><path d="M11 4H4v7m17-7h7v7M4 21v7h7m17-7v7h-7M10 16l4 4 9-9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="m3 6 1.5 1.5L7 5m3 1h11M3 12h3m4 0h11M3 18h3m4 0h11"/></symbol>
+    <symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v2"/></symbol>
+    <symbol id="i-space" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M8 7V4h8v3m-4 6v3"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-1v2a3 3 0 0 1-3 3H3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 16v5h16v-5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M8 5h1m6 0h1M8 12h1m6 0h1M8 19h1m6 0h1" stroke-width="3"/></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4H4v16h6m-2-8h13m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-5 8-8 9-3-1-8-5-8-9V6zM8 12l3 3 5-6"/></symbol>
+  </defs></svg>
+
+  <div class="app-frame">
+    <header class="app-header">
+      <div class="brand"><svg class="brand-icon"><use href="#i-mark"/></svg><span>НА КОНТРОЛІ<span class="brand-sub beta-label">БЕТА 1</span></span></div>
+      <span id="connection-status" class="status-label" role="status"><span class="status-dot"></span><span id="connection-text">Локально</span></span>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <aside id="advance-alerts" class="advance-alerts" aria-label="Завчасні нагадування" hidden>
+        <div class="advance-alert-heading"><strong><svg class="icon"><use href="#i-bell"/></svg>Наближається час</strong><button id="dismiss-alerts" type="button">Сховати</button></div>
+        <ul id="advance-alert-list" class="advance-alert-list"></ul>
+        <span id="advance-alert-announcement" class="visually-hidden" role="status" aria-live="polite"></span>
+        <p id="advance-alert-more" hidden></p>
+      </aside>
+      <section id="welcome-view" class="welcome-view" aria-labelledby="welcome-title">
+        <div class="welcome-copy"><h1 id="welcome-title">БАЖАЮ<br>МІЦНОГО<span class="olive-dot">!</span></h1><p class="welcome-intro">Твої задачі — <strong>НА КОНТРОЛІ.</strong></p></div>
+        <div id="first-space-art" class="welcome-art" aria-hidden="true"><div class="art-grid"></div><div class="art-target"><svg><use href="#i-mark"/></svg></div></div>
+        <div id="profile-picker" hidden><div class="section-label">ТВОЇ ПРОСТОРИ <span id="profile-count"></span></div><div id="profile-list" class="profile-list"></div></div>
+        <p class="local-note"><svg class="icon"><use href="#i-shield"/></svg><span>Особисті задачі зберігаються на пристрої.<br>Працює без інтернету після першого завантаження.</span></p>
+      </section>
+
+      <section id="tasks-view" hidden aria-label="Список задач">
+        <p id="storage-repair-note" class="storage-repair-note" role="alert" hidden></p>
+        <div class="feed-pager" aria-label="Перемикання стрічки">
+          <button id="feed-prev" class="feed-arrow previous" type="button" aria-label="Попередня стрічка"><svg class="icon"><use href="#i-arrow"/></svg></button>
+          <div class="feed-heading"><h1 id="feed-title" aria-live="polite">Сьогодні</h1><div id="feed-dots" class="feed-dots" aria-hidden="true"><span></span><span></span><span></span></div></div>
+          <button id="feed-next" class="feed-arrow" type="button" aria-label="Наступна стрічка"><svg class="icon"><use href="#i-arrow"/></svg></button>
+        </div>
+        <p id="reminder-due" class="reminder-due" hidden></p>
+        <div id="task-list" class="task-list"></div>
+        <div id="tasks-empty" class="empty-state"><div class="empty-icon"><svg><use href="#i-mark"/></svg></div><h2 id="empty-title">Простір для важливого</h2><p id="empty-text">Додай першу задачу кнопкою «+» внизу.<br>І тримай її на контролі.</p></div>
+        <div id="timeline-more" class="timeline-more" hidden><button id="load-more-days" class="btn btn-quiet" type="button">Наступні 7 днів<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+      </section>
+
+      <section id="routines-view" hidden aria-labelledby="routines-title">
+        <div class="routine-heading"><span class="routine-heading-icon"><svg class="icon"><use href="#i-repeat"/></svg></span><div><h1 id="routines-title">Повтори</h1></div></div>
+        <div id="routine-list" class="routine-list"></div>
+        <div id="routines-empty" class="empty-state"><div class="empty-icon"><svg><use href="#i-repeat"/></svg></div><h2>Один раз налаштуй</h2><p>Задачі й нагадування на кожен день<br>обрані дні тижня чи місяць. Додай перше кнопкою «+».</p></div>
+      </section>
+
+      <section id="teams-view" class="teams-panel" hidden aria-label="Команди"></section>
+
+      <section id="space-view" hidden aria-labelledby="space-title">
+        <div class="page-heading"><div><h1 id="space-title">Мій простір</h1></div></div>
+        <div class="space-card"><span class="space-avatar"><svg class="icon"><use href="#i-space"/></svg></span><div><h2 id="space-current-name"></h2><p id="space-created"></p></div><svg class="icon ms-auto"><use href="#i-lock"/></svg></div>
+        <div class="section-label">ДАНІ ТА РЕЗЕРВНА КОПІЯ</div>
+        <div class="action-list">
+          <button id="export-button" class="action-row" type="button"><svg class="icon"><use href="#i-download"/></svg><span><strong>Експортувати JSON</strong><small>Особисті задачі й дані підключених команд</small></span><svg class="icon row-arrow"><use href="#i-arrow"/></svg></button>
+          <button id="import-button" class="action-row" type="button"><svg class="icon"><use href="#i-upload"/></svg><span><strong>Імпортувати JSON</strong><small>Відновити як окремий простір</small></span><svg class="icon row-arrow"><use href="#i-arrow"/></svg></button>
+        </div>
+        <p class="helper-note">Збережи копію перед зміною пристрою. Очищення даних браузера видалить локальні простори. Для відновлення потрібен PIN із копії.</p>
+        <div class="section-label">ЗАВЧАСНІ НАГАДУВАННЯ</div>
+        <div class="alert-settings">
+          <label class="alert-setting-label form-switch" for="alerts-enabled"><span>За 60, 30 і 10 хвилин</span><input id="alerts-enabled" class="form-check-input" type="checkbox" role="switch" checked></label>
+          <p class="helper-note">Працюють, поки додаток відкритий і простір розблокований. У фоні та після закриття сповіщень немає.</p>
+          <button id="enable-system-alerts" class="btn btn-quiet" type="button">Увімкнути системні сповіщення</button>
+          <p id="alerts-system-status" class="helper-note" role="status"></p>
+        </div>
+        <div class="section-label">ДОДАТОК</div>
+        <div class="action-list"><button type="button" class="action-row" data-open-guide="owner"><svg class="icon"><use href="#i-list"/></svg><span><strong>Інструкція</strong><small>Власна база, команди та можливості бети</small></span><svg class="icon row-arrow"><use href="#i-arrow"/></svg></button><button type="button" class="action-row install-button"><svg class="icon"><use href="#i-download"/></svg><span><strong>Встановити на телефон</strong><small>Швидкий доступ із головного екрана</small></span><svg class="icon row-arrow"><use href="#i-arrow"/></svg></button></div>
+        <p id="offline-detail" class="helper-note" role="status">Готуємо додаток до роботи без зв’язку…</p>
+        <div class="section-label">КЕРУВАННЯ ПРОСТОРОМ</div>
+        <div class="action-list"><button id="change-pin-button" type="button" class="action-row"><svg class="icon"><use href="#i-lock"/></svg><span><strong>Змінити PIN</strong><small>Новий код із 4 цифр</small></span><svg class="icon row-arrow"><use href="#i-arrow"/></svg></button><button id="logout-button" type="button" class="action-row"><svg class="icon"><use href="#i-exit"/></svg><span><strong>Вийти з простору</strong><small>Дані збережуться, для входу потрібен PIN</small></span></button><button id="delete-space-button" type="button" class="action-row danger-text"><svg class="icon"><use href="#i-trash"/></svg><span><strong>Видалити простір</strong><small>Назавжди видалити його дані з пристрою</small></span></button></div>
+        <div class="space-footnote">БЕТА 1 <span>v2.2.0-beta.1</span></div>
+      </section>
+      <noscript><p class="alert alert-warning">Для роботи додатка ввімкни JavaScript у браузері.</p></noscript>
+    </main>
+
+    <footer id="welcome-controls" class="welcome-controls"><div class="bottom-inner"><button id="create-space-button" class="btn btn-primary primary-wide" type="button"><svg class="icon"><use href="#i-plus"/></svg>СТВОРИТИ ПРОСТІР<svg class="icon"><use href="#i-arrow"/></svg></button><div class="welcome-secondary"><button id="import-welcome-button" class="text-button" type="button">Імпортувати JSON</button><span></span><button class="text-button install-button" type="button">Встановити</button><span></span><button class="text-button" type="button" data-open-guide="owner">Інструкція</button></div></div></footer>
+    <nav id="app-nav" class="bottom-nav" aria-label="Основне керування" hidden><div class="nav-inner"><button id="nav-tasks" type="button" class="nav-item active" aria-current="page"><svg class="icon"><use href="#i-list"/></svg><span>Стрічка</span></button><button id="nav-routines" type="button" class="nav-item"><svg class="icon"><use href="#i-repeat"/></svg><span>Повтори</span></button><button id="nav-add" type="button" class="add-button" aria-label="Додати задачу"><svg><use href="#i-plus"/></svg></button><button id="nav-teams" type="button" class="nav-item"><svg class="icon"><use href="#i-team"/></svg><span>Команди</span></button><button id="nav-space" type="button" class="nav-item"><svg class="icon"><use href="#i-space"/></svg><span>Простір</span></button></div></nav>
+  </div>
+
+  <dialog id="space-dialog" class="sheet pin-sheet" aria-labelledby="space-dialog-title">
+    <form id="space-form">
+      <div class="sheet-handle"></div>
+      <h2 id="space-dialog-title">Створити простір</h2>
+      <label class="form-label" for="space-name">Назва простору</label>
+      <input id="space-name" class="form-control" type="text" placeholder="Наприклад, Мої справи" maxlength="40" autocomplete="off" required>
+      <div class="pin-fields">
+        <div class="pin-field"><label class="form-label" for="space-pin">PIN · 4 цифри</label><input id="space-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="4" autocomplete="off" required></div>
+        <div class="pin-field"><label class="form-label" for="space-pin-confirm">Повтори PIN</label><input id="space-pin-confirm" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="4" autocomplete="off" required></div>
+      </div>
+      <div data-pin-pad></div>
+      <p class="helper-note">Запам’ятай PIN: відновити його неможливо. Назва простору видима у списку. Короткий PIN не захищає від перебору скопійованої бази.</p>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary primary-wide" type="submit">Створити простір<svg class="icon"><use href="#i-arrow"/></svg></button>
+      <button class="btn btn-quiet" type="button" data-close>Скасувати</button>
+    </form>
+  </dialog>
+
+  <dialog id="unlock-dialog" class="sheet pin-sheet" aria-labelledby="unlock-title">
+    <form id="unlock-form">
+      <div class="sheet-handle"></div><svg class="sheet-icon"><use href="#i-lock"/></svg>
+      <h2 id="unlock-title">Вхід у простір</h2><p id="unlock-space-name" class="sheet-intro"></p>
+      <label class="form-label" for="unlock-pin">PIN-код</label><input id="unlock-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="12" autocomplete="off" required>
+      <div data-pin-pad></div><p id="unlock-pin-note" class="helper-note" hidden></p>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary primary-wide" type="submit">Увійти<svg class="icon"><use href="#i-arrow"/></svg></button>
+      <button class="btn btn-quiet" type="button" data-close>Назад</button>
+    </form>
+  </dialog>
+
+  <dialog id="change-pin-dialog" class="sheet pin-sheet" aria-labelledby="change-pin-title">
+    <form id="change-pin-form">
+      <div class="sheet-handle"></div><div class="eyebrow">КЕРУВАННЯ ПРОСТОРОМ</div>
+      <h2 id="change-pin-title">Змінити PIN</h2>
+      <label class="form-label" for="current-pin">Поточний PIN</label><input id="current-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="12" autocomplete="off" required>
+      <div class="pin-fields">
+        <div class="pin-field"><label class="form-label" for="new-pin">Новий · 4 цифри</label><input id="new-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="4" autocomplete="off" required></div>
+        <div class="pin-field"><label class="form-label" for="new-pin-confirm">Повтори новий</label><input id="new-pin-confirm" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="4" autocomplete="off" required></div>
+      </div>
+      <div data-pin-pad></div>
+      <p class="helper-note">Дані простору збережуться. Після зміни експортуй нову копію: старі JSON-файли відкриваються старим PIN.</p>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary primary-wide" type="submit">Зберегти новий PIN<svg class="icon"><use href="#i-check"/></svg></button>
+      <button class="btn btn-quiet" type="button" data-close>Скасувати</button>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" class="sheet" aria-labelledby="task-dialog-title">
+    <form id="task-form">
+      <div class="sheet-handle"></div>
+      <div class="eyebrow">ЗАПИСАВ — НЕ ЗАБУВ</div>
+      <h2 id="task-dialog-title">Нова задача</h2>
+      <p id="task-occurrence-note" class="helper-note" hidden>Зміни лише для цієї дати. Увесь розклад можна змінити на сторінці «Повтори».</p>
+      <label class="form-label" for="task-title">Що потрібно зробити?</label>
+      <textarea id="task-title" class="form-control task-textarea" rows="3" maxlength="500" placeholder="Коротко про головне…" required></textarea>
+      <div class="d-flex align-items-center justify-content-between"><label class="form-label" for="task-date">Дата</label><span id="date-relative" class="date-relative">Сьогодні</span></div>
+      <div class="date-control">
+        <div class="date-input-wrap"><svg class="icon"><use href="#i-calendar"/></svg><input id="task-date" class="form-control" type="date" min="0001-01-01" max="9999-12-31" required aria-label="Дата задачі"></div>
+        <button id="next-day-button" class="btn day-button" type="button" aria-label="Додати один день">+1 <span>день</span></button>
+      </div>
+      <label class="form-label" for="task-time">Час</label>
+      <div class="date-control">
+        <div class="date-input-wrap"><svg class="icon"><use href="#i-clock"/></svg><input id="task-time" class="form-control" type="time" step="60" required aria-label="Час задачі"></div>
+        <button id="next-time-button" class="btn day-button" type="button" aria-label="Наступна півгодина" title="Перейти до найближчого наступного часу :00 або :30">+30 <span>хв</span></button>
+      </div>
+      <p id="legacy-time-note" class="helper-note" hidden>У цій задачі час ще не задано. Можеш вибрати його або залишити порожнім.</p>
+      <section id="steps-editor" class="steps-editor" aria-labelledby="steps-editor-title" hidden>
+        <div class="steps-heading"><h3 id="steps-editor-title">Послідовність дій</h3><span id="step-count" class="subtle-tag">0 етапів</span></div>
+        <p id="step-drag-help" class="helper-note">Затисни ручку зліва й перетягни етап. З клавіатури — стрілки ↑ / ↓ на ручці.</p>
+        <ol id="steps-edit-list" class="steps-edit-list"></ol>
+        <label class="form-label" for="step-title">Новий етап</label>
+        <div class="step-add-control"><input id="step-title" class="form-control" type="text" maxlength="500" autocomplete="off" placeholder="Що зробити на цьому етапі?"><button id="add-step-button" class="btn step-add-button" type="button" aria-label="Додати етап"><svg class="icon"><use href="#i-plus"/></svg></button></div>
+        <p class="helper-note step-save-note">Виконання етапів відмічай у картці задачі. Тут зміни збережуться після натискання «Зберегти зміни».</p>
+        <span id="step-reorder-status" class="visually-hidden" role="status" aria-live="polite"></span>
+      </section>
+      <p class="form-error" role="alert"></p>
+      <button id="save-task-button" class="btn btn-primary primary-wide" type="submit">Додати задачу<svg class="icon"><use href="#i-check"/></svg></button>
+      <button id="delete-task-button" type="button" class="btn btn-quiet danger-text" hidden>Видалити задачу</button>
+      <button class="btn btn-quiet" type="button" data-close>Скасувати</button>
+    </form>
+  </dialog>
+
+  <dialog id="task-detail-dialog" class="sheet detail-sheet" aria-labelledby="detail-title">
+    <div id="task-detail-content">
+      <div class="sheet-handle"></div>
+      <div class="eyebrow">КАРТКА ЗАДАЧІ</div>
+      <h2 id="detail-title" tabindex="-1"></h2>
+      <div class="detail-metadata"><span id="detail-date"></span><span id="detail-state" class="subtle-tag"></span></div>
+      <p id="detail-completed-at" class="detail-completed-at" hidden></p>
+      <div class="steps-heading"><h3>Послідовність дій</h3><span id="detail-progress-label"></span></div>
+      <progress id="detail-progress" class="step-progress" max="1" value="0" aria-label="Виконання етапів"></progress>
+      <ol id="detail-steps" class="detail-steps"></ol>
+      <p id="detail-empty" class="detail-empty">Етапів ще немає. Додай їх у редагуванні — кнопка з олівцем праворуч від задачі.</p>
+      <p id="detail-save-note" class="helper-note">Натисни на етап, щоб відмітити його виконаним. Зміни зберігаються одразу.</p>
+      <p id="detail-feedback" class="helper-note" role="status" aria-live="polite"></p>
+      <details id="detail-history" class="completion-history" hidden>
+        <summary>Історія виконання <span id="detail-history-count"></span></summary>
+        <ol id="detail-history-list"></ol>
+        <button id="detail-history-more" class="btn btn-quiet" type="button" hidden>Показати попередні події</button>
+      </details>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-quiet" type="button" data-close>Закрити</button>
+    </div>
+  </dialog>
+
+  <dialog id="routine-dialog" class="sheet" aria-labelledby="routine-dialog-title">
+    <form id="routine-form">
+      <div class="sheet-handle"></div><div class="eyebrow">У СВОЄМУ РИТМІ</div>
+      <div class="routine-title-row"><h2 id="routine-dialog-title">Новий повтор</h2><button id="routine-help-button" class="routine-help-button" type="button" aria-label="Як працюють повтори" aria-haspopup="dialog" aria-controls="routine-help-dialog">?</button></div>
+      <label class="form-label" for="routine-title">Що тримати на контролі?</label>
+      <textarea id="routine-title" class="form-control task-textarea" rows="2" maxlength="500" placeholder="Коротко про головне…" required></textarea>
+      <fieldset id="routine-week-options" class="weekday-field">
+        <legend class="form-label">Дні тижня</legend>
+        <div class="weekday-picker" aria-label="Дні повторення">
+          <button type="button" data-weekday="1" aria-label="Понеділок" aria-pressed="false">Пн</button>
+          <button type="button" data-weekday="2" aria-label="Вівторок" aria-pressed="false">Вт</button>
+          <button type="button" data-weekday="3" aria-label="Середа" aria-pressed="false">Ср</button>
+          <button type="button" data-weekday="4" aria-label="Четвер" aria-pressed="false">Чт</button>
+          <button type="button" data-weekday="5" aria-label="П’ятниця" aria-pressed="false">Пт</button>
+          <button type="button" data-weekday="6" aria-label="Субота" aria-pressed="false">Сб</button>
+          <button type="button" data-weekday="7" aria-label="Неділя" aria-pressed="false">Нд</button>
+        </div>
+      </fieldset>
+      <p id="routine-schedule-summary" class="routine-schedule-summary" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="routine-form-grid">
+        <div><label class="form-label" for="routine-start-date">Починаючи з</label><input id="routine-start-date" class="form-control" type="date" min="0001-01-01" max="9999-12-31" required></div>
+        <div><label class="form-label" for="routine-time">Час</label><input id="routine-time" class="form-control" type="time" step="60" required></div>
+      </div>
+      <label class="form-label" for="routine-kind">Тип</label><select id="routine-kind" class="form-select form-control"><option value="task">Задача</option><option value="reminder">Нагадування</option></select>
+      <p id="routine-reminder-note" class="helper-note" hidden>Нагадування з’являються у стрічці. Завчасні сповіщення працюють, поки додаток відкритий і простір розблокований.</p>
+      <section id="routine-steps-editor" class="steps-editor" aria-labelledby="routine-steps-title" hidden>
+        <div class="steps-heading"><h3 id="routine-steps-title">Послідовність дій</h3><span id="routine-step-count" class="subtle-tag"></span></div>
+        <p id="routine-step-drag-help" class="helper-note">Затисни ручку й перетягни етап. З клавіатури — ↑ / ↓.</p>
+        <ol id="routine-steps-list" class="steps-edit-list"></ol>
+        <label class="form-label" for="routine-step-title">Новий етап</label><div class="step-add-control"><input id="routine-step-title" class="form-control" maxlength="500" placeholder="Що потрібно зробити?" autocomplete="off"><button id="add-routine-step" class="btn step-add-button" type="button" aria-label="Додати етап повтору"><svg class="icon"><use href="#i-plus"/></svg></button></div>
+        <span id="routine-step-drag-status" class="visually-hidden" role="status"></span>
+      </section>
+      <p id="routine-edit-note" class="helper-note" hidden>Оновляться лише ще не розпочаті задачі від сьогодні. Попередні дати й виконання збережуться.</p>
+      <p class="form-error" role="alert"></p>
+      <button id="save-routine-button" class="btn btn-primary primary-wide" type="submit">Додати повтор<svg class="icon"><use href="#i-check"/></svg></button>
+      <button id="delete-routine-button" class="btn btn-quiet danger-text" type="button" hidden>Видалити повтор</button>
+      <button class="btn btn-quiet" type="button" data-close>Скасувати</button>
+    </form>
+  </dialog>
+
+  <dialog id="routine-help-dialog" class="sheet routine-help-sheet" aria-labelledby="routine-help-title">
+    <div class="eyebrow">ПРОСТИЙ РОЗКЛАД</div>
+    <h2 id="routine-help-title">Як працюють повтори</h2>
+    <ul class="routine-help-list">
+      <li><strong>Усі 7 днів вибрані</strong><span>Задача повторюється щодня.</span></li>
+      <li><strong>Один або кілька днів</strong><span>Повтор щотижня у вибрані дні. Наприклад, Пн і Чт — кожного понеділка та четверга.</span></li>
+      <li><strong>Жодного дня</strong><span>Повтор щомісяця в число початкової дати. Якщо такого числа немає — в останній день місяця.</span></li>
+    </ul>
+    <p class="helper-note">Дата «Починаючи з» визначає перший можливий повтор. Для кінця кожного місяця вибери дату на 31-ше й зніми всі дні тижня.</p>
+    <button class="routine-help-dismiss" type="button" autofocus>Торкнися будь-де, щоб закрити</button>
+  </dialog>
+
+  <dialog id="import-dialog" class="sheet pin-sheet" aria-labelledby="import-title">
+    <form id="import-form">
+      <div class="sheet-handle"></div><div class="eyebrow">УСЕ ВАЖЛИВЕ — ІЗ СОБОЮ</div>
+      <h2 id="import-title">Імпорт простору</h2><p class="sheet-intro">Копія відкриється як окремий простір. Наявні дані залишаться на місці.</p>
+      <p id="import-filename" class="file-label"></p>
+      <label class="form-label" for="import-pin">PIN із резервної копії</label><input id="import-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="12" autocomplete="off" required>
+      <div data-pin-pad></div>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary primary-wide" type="submit">Імпортувати простір<svg class="icon"><use href="#i-upload"/></svg></button>
+      <button class="btn btn-quiet" type="button" data-close>Скасувати</button>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="sheet" aria-labelledby="confirm-title">
+    <form id="confirm-form">
+      <div class="sheet-handle"></div><h2 id="confirm-title"></h2><p id="confirm-text" class="sheet-intro"></p>
+      <div id="delete-pin-field" hidden>
+        <label class="form-label" for="delete-pin">PIN цього простору</label><input id="delete-pin" class="form-control pin-input" type="password" readonly inputmode="none" maxlength="12" autocomplete="off">
+        <div data-pin-pad></div>
+      </div>
+      <p class="form-error" role="alert"></p>
+      <button id="confirm-submit" class="btn btn-danger primary-wide" type="submit">Видалити</button>
+      <button class="btn btn-quiet" type="button" data-close>Залишити</button>
+    </form>
+  </dialog>
+
+  <dialog id="install-dialog" class="sheet" aria-labelledby="install-title"><div class="sheet-handle"></div><div class="eyebrow">ЗАВЖДИ ПІД РУКОЮ</div><h2 id="install-title">Додаток на телефоні</h2><div id="install-instructions"></div><p class="helper-note">Відкрий додаток онлайн один раз і дочекайся статусу «Офлайн готово». Далі задачі, простори й резервні копії працюють без інтернету.</p><p class="helper-note">На iPhone дані Safari та встановленого додатка можуть бути окремими. Якщо вже є задачі, перенеси їх через JSON.</p><button id="native-install-button" class="btn btn-primary primary-wide" type="button" hidden>Встановити додаток</button><button class="btn btn-quiet" type="button" data-close>Зрозуміло</button></dialog>
+
+  <input id="import-file" type="file" accept=".json,application/json" hidden>
+  <div id="toast" class="app-toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

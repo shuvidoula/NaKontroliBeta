@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function login() { return request.auth.token.email.split('@')[0]; }
+    function provision() { return get(/databases/$(database)/documents/USERS/$(login())).data; }
+    function authorized() {
+      let grant = provision();
+      return request.auth != null && grant.uid == request.auth.uid && grant.enabled == true
+        && grant.resetAfter is int && grant.resetAfter >= 0
+        && request.auth.token.auth_time > grant.resetAfter;
+    }
+    function signed() { return authorized() && provision().mustChangePassword == false; }
+    function actor() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.identityId; }
+    function team(t) { return get(/databases/$(database)/documents/teams/$(t)).data; }
+    function teamAfter(t) { return getAfter(/databases/$(database)/documents/teams/$(t)).data; }
+    function person(t, p) { return get(/databases/$(database)/documents/teams/$(t)/members/$(p)).data; }
+    function member(t) { return signed() && actor() in team(t).memberIds; }
+    function admin(t) { return member(t) && person(t, actor()).role in ['owner', 'admin']; }
+    function owner(t) { return member(t) && team(t).ownerId == actor(); }
+    function id(v) { return v is string && v.size() > 0 && v.size() <= 100 && v.matches('^[A-Za-z0-9_-]+$') && !(v in ['__proto__', 'prototype', 'constructor']); }
+    function key(k) { return k is map && k.keys().hasOnly(['kty', 'crv', 'x', 'y']) && k.kty == 'EC' && k.crv == 'P-256' && k.x is string && k.x.size() == 43 && k.y is string && k.y.size() == 43; }
+    function publicPerson(p) { return id(p.id) && p.alias is string && p.alias.size() > 0 && p.alias.size() <= 60 && key(p.sign) && key(p.box); }
+    function matchesIdentity(p) {
+      let known = get(/databases/$(database)/documents/identities/$(p.id)).data;
+      return p.id == known.id && p.alias == known.alias && p.sign == known.sign && p.box == known.box;
+    }
+    function wrap(w, t, recipient) {
+      return w is map && w.keys().hasOnly(['teamId', 'from', 'to', 'iv', 'cipher', 'signature'])
+        && w.teamId == t && w.from == actor() && w.to == recipient
+        && w.iv is string && w.iv.size() == 16 && w.cipher is string && w.cipher.size() == 64
+        && w.signature is string && w.signature.size() == 86;
+    }
+    match /USERS/{name} {
+      // Login grants are provisioned only by the trusted Admin SDK / Firebase console.
+      // No password or password hash belongs in this document.
+      allow get: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if authorized() && login() == name && resource.data.uid == request.auth.uid
+        && resource.data.mustChangePassword == true && request.resource.data.mustChangePassword == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mustChangePassword']);
+    }
+    match /system/bootstrap {
+      allow get: if signed();
+      allow write: if false;
+    }
+    match /users/{uid} {
+      allow get: if authorized() && request.auth.uid == uid;
+      allow create: if signed() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['identityId']) && id(request.resource.data.identityId)
+        && getAfter(/databases/$(database)/documents/identities/$(request.resource.data.identityId)).data.uid == uid;
+    }
+    match /identities/{identityId} {
+      // Public keys may be checked before first-password setup to avoid binding the wrong Space.
+      allow get: if authorized();
+      allow create: if signed() && request.resource.data.keys().hasOnly(['uid', 'id', 'alias', 'sign', 'box'])
+        && request.resource.data.uid == request.auth.uid && request.resource.data.id == identityId
+        && publicPerson(request.resource.data)
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.identityId == identityId;
+      match /teams/{t} {
+        allow read: if signed() && actor() == identityId;
+        allow create: if signed() && request.resource.data.keys().hasOnly(['teamId', 'status']) && request.resource.data.teamId == t
+          && ((actor() == identityId && request.resource.data.status == 'pending'
+            && getAfter(/databases/$(database)/documents/teams/$(t)/requests/$(identityId)).data.id == identityId)
+          || (request.resource.data.status == 'approved'
+            && getAfter(/databases/$(database)/documents/teams/$(t)/members/$(identityId)).data.id == identityId
+            && (actor() == identityId || admin(t))));
+        allow update: if admin(t) && resource.data.status == 'pending' && request.resource.data.status == 'approved'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && getAfter(/databases/$(database)/documents/teams/$(t)/members/$(identityId)).data.id == identityId;
+      }
+    }
+    match /invites/{tokenHash} {
+      allow get: if signed();
+      allow create: if signed() && tokenHash.matches('^[A-Za-z0-9_-]{43}$')
+        && request.resource.data.keys().hasOnly(['teamId', 'creator', 'expiresAt', 'claimedBy'])
+        && admin(request.resource.data.teamId) && request.resource.data.creator == actor()
+        && request.resource.data.claimedBy == null && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time && request.resource.data.expiresAt <= request.time + duration.value(15, 'm');
+      allow update: if signed() && resource.data.claimedBy == null && resource.data.expiresAt > request.time
+        && request.resource.data.claimedBy == actor() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimedBy'])
+        && getAfter(/databases/$(database)/documents/teams/$(resource.data.teamId)/requests/$(actor())).data.inviteId == tokenHash;
+    }
+    match /teams/{t} {
+      allow get: if signed() && (!exists(/databases/$(database)/documents/teams/$(t)) || member(t));
+      allow create: if signed() && id(t) && get(/databases/$(database)/documents/system/bootstrap).data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['ownerId', 'memberIds', 'lastAdded', 'epoch', 'createdAt'])
+        && request.resource.data.ownerId == actor() && request.resource.data.memberIds == [actor()]
+        && request.resource.data.lastAdded == actor() && request.resource.data.epoch == 1 && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/teams/$(t)/members/$(actor())).data.role == 'owner';
+      allow update: if admin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'lastAdded'])
+        && id(request.resource.data.lastAdded) && !(request.resource.data.lastAdded in resource.data.memberIds)
+        && request.resource.data.memberIds == resource.data.memberIds.concat([request.resource.data.lastAdded])
+        && request.resource.data.memberIds.size() <= 30
+        && getAfter(/databases/$(database)/documents/teams/$(t)/members/$(request.resource.data.lastAdded)).data.role == 'member';
+      match /members/{p} {
+        allow read: if member(t);
+        allow create: if signed() && request.resource.data.keys().hasOnly(['id', 'alias', 'sign', 'box', 'role', 'wrap'])
+          && request.resource.data.id == p && matchesIdentity(request.resource.data)
+          && p in teamAfter(t).memberIds
+          && ((!exists(/databases/$(database)/documents/teams/$(t)) && p == actor()
+              && teamAfter(t).ownerId == p && request.resource.data.role == 'owner' && request.resource.data.wrap == null)
+            || (admin(t) && request.resource.data.role == 'member'
+              && exists(/databases/$(database)/documents/teams/$(t)/requests/$(p)) && wrap(request.resource.data.wrap, t, p)
+              && !existsAfter(/databases/$(database)/documents/teams/$(t)/requests/$(p))));
+        allow update: if owner(t) && p != actor() && resource.data.role == 'member' && request.resource.data.role == 'admin'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']);
+      }
+      match /requests/{p} {
+        allow read: if signed() && (actor() == p || admin(t));
+        allow create: if signed() && actor() == p && !(p in team(t).memberIds) && team(t).memberIds.size() < 30
+          && request.resource.data.keys().hasOnly(['id', 'alias', 'sign', 'box', 'inviteId'])
+          && request.resource.data.id == p && matchesIdentity(request.resource.data)
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data.teamId == t
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data.claimedBy == null
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data.expiresAt > request.time
+          && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data.claimedBy == p;
+        allow delete: if admin(t) && getAfter(/databases/$(database)/documents/teams/$(t)/members/$(p)).data.id == p;
+      }
+      function header(messageId) { return getAfter(/databases/$(database)/documents/teams/$(t)/events/$(messageId)).data.envelope.header; }
+      function taskAfter(taskId) { return getAfter(/databases/$(database)/documents/teams/$(t)/tasks/$(taskId)).data; }
+      function taskNow(taskId) { return get(/databases/$(database)/documents/teams/$(t)/tasks/$(taskId)).data; }
+      function stepAt(steps, ids, members, i) {
+        // keys()/matches() already fail closed on non-map/non-string values.
+        return steps.size() <= i || (steps[i].keys().hasOnly(['id', 'assignee'])
+          && steps[i].id.matches('^[A-Za-z0-9_-]{1,100}$') && steps[i].id == ids[i] && steps[i].assignee in members);
+      }
+      function stepsValid(steps, ids, members) {
+        return steps is list && ids is list && steps.size() <= 12 && ids.size() == steps.size() && ids.toSet().size() == ids.size()
+          && stepAt(steps, ids, members, 0) && stepAt(steps, ids, members, 1) && stepAt(steps, ids, members, 2) && stepAt(steps, ids, members, 3)
+          && stepAt(steps, ids, members, 4) && stepAt(steps, ids, members, 5) && stepAt(steps, ids, members, 6) && stepAt(steps, ids, members, 7)
+          && stepAt(steps, ids, members, 8) && stepAt(steps, ids, members, 9) && stepAt(steps, ids, members, 10) && stepAt(steps, ids, members, 11);
+      }
+      function ownsStepAt(steps, stepId, i) { return steps.size() > i && steps[i].id == stepId && steps[i].assignee == actor(); }
+      function ownsStep(steps, stepId) {
+        return ownsStepAt(steps, stepId, 0) || ownsStepAt(steps, stepId, 1) || ownsStepAt(steps, stepId, 2) || ownsStepAt(steps, stepId, 3)
+          || ownsStepAt(steps, stepId, 4) || ownsStepAt(steps, stepId, 5) || ownsStepAt(steps, stepId, 6) || ownsStepAt(steps, stepId, 7)
+          || ownsStepAt(steps, stepId, 8) || ownsStepAt(steps, stepId, 9) || ownsStepAt(steps, stepId, 10) || ownsStepAt(steps, stepId, 11);
+      }
+      match /tasks/{taskId} {
+        allow read: if member(t);
+        allow create: if member(t) && id(taskId) && taskCreate(request.resource.data, taskId);
+        allow update: if member(t) && taskChange(resource.data, request.resource.data, header(request.resource.data.lastMessage), taskId);
+      }
+      function taskCreate(d, taskId) {
+        let h = header(d.lastMessage);
+        let members = team(t).memberIds;
+        return d.keys().hasOnly(['creator', 'assignee', 'version', 'done', 'steps', 'stepIds', 'completed', 'lastMessage'])
+          && d.creator == actor() && d.assignee in members && d.version == 1 && d.done == false && d.completed == []
+          && stepsValid(d.steps, d.stepIds, members) && h.kind == 'task-create' && h.taskId == taskId
+          && h.assignee == d.assignee && h.steps == d.steps;
+      }
+      function taskChange(before, after, h, taskId) {
+        return after.diff(before).affectedKeys().hasOnly(['version', 'done', 'completed', 'lastMessage'])
+          && after.version == before.version + 1 && h.version == after.version && h.taskId == taskId
+          && h.senderId == actor() && after.lastMessage != before.lastMessage && h.done is bool
+          && ((h.kind == 'task-step' && h.stepId in before.stepIds && (admin(t) || ownsStep(before.steps, h.stepId))
+            && (h.done ? after.completed.toSet() == before.completed.toSet().union([h.stepId].toSet()) : after.completed == before.completed.removeAll([h.stepId]))
+            && after.completed is list && after.completed.toSet().size() == after.completed.size()
+            && after.done == (h.done ? before.done : false))
+          || (h.kind == 'task-complete' && (admin(t) || before.assignee == actor()) && after.completed == before.completed
+            && after.done == h.done && (!h.done || before.completed.size() == before.steps.size())));
+      }
+      function eventValid(e, messageId) {
+        let h = e.envelope.header;
+        return e.keys().hasOnly(['envelope', 'hash', 'senderId', 'recipients', 'pending', 'createdAt']) && e.pending == e.recipients
+          && e.envelope.keys().hasOnly(['header', 'iv', 'cipher', 'signature'])
+          && h.v == 1 && h.epoch == 1 && h.id == messageId && h.teamId == t && h.senderId == actor() && id(h.taskId)
+          && e.senderId == actor() && e.recipients == h.recipients && e.recipients is list && e.recipients.size() > 0
+          && e.recipients.toSet().size() == e.recipients.size() && e.recipients.toSet().difference(team(t).memberIds.toSet()).size() == 0
+          && e.hash is string && e.hash.size() == 43 && e.createdAt == request.time
+          && e.envelope.iv is string && e.envelope.iv.size() == 16 && e.envelope.cipher is string && e.envelope.cipher.size() > 0 && e.envelope.cipher.size() <= 500000
+          && e.envelope.signature is string && e.envelope.signature.size() == 86
+          && ((h.kind == 'snapshot' && admin(t) && e.recipients.size() == 1
+            && h.keys().hasOnly(['v', 'epoch', 'id', 'teamId', 'senderId', 'kind', 'taskId', 'recipients']))
+          || (e.recipients.toSet() == team(t).memberIds.toSet() && taskAfter(h.taskId).lastMessage == messageId
+            && taskAfter(h.taskId).version == h.version
+            && ((h.kind == 'task-create' && h.version == 1 && !exists(/databases/$(database)/documents/teams/$(t)/tasks/$(h.taskId))
+              && h.keys().hasOnly(['v', 'epoch', 'id', 'teamId', 'senderId', 'kind', 'taskId', 'recipients', 'version', 'assignee', 'steps']))
+            || (h.kind == 'task-step' && taskNow(h.taskId).version + 1 == h.version
+              && h.keys().hasOnly(['v', 'epoch', 'id', 'teamId', 'senderId', 'kind', 'taskId', 'recipients', 'version', 'stepId', 'done']))
+            || (h.kind == 'task-complete' && taskNow(h.taskId).version + 1 == h.version
+              && h.keys().hasOnly(['v', 'epoch', 'id', 'teamId', 'senderId', 'kind', 'taskId', 'recipients', 'version', 'done'])))));
+      }
+      match /events/{messageId} {
+        allow read: if member(t) && (actor() in resource.data.pending || actor() in resource.data.recipients);
+        allow create: if member(t) && id(messageId) && !exists(/databases/$(database)/documents/teams/$(t)/receipts/$(messageId))
+          && eventValid(request.resource.data, messageId)
+          && getAfter(/databases/$(database)/documents/teams/$(t)/receipts/$(messageId)).data.hash == request.resource.data.hash;
+        allow update: if member(t) && actor() in resource.data.pending
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending'])
+          && request.resource.data.pending == resource.data.pending.removeAll([actor()])
+          && actor() in getAfter(/databases/$(database)/documents/teams/$(t)/receipts/$(messageId)).data.acks;
+        allow delete: if member(t)
+          && getAfter(/databases/$(database)/documents/teams/$(t)/receipts/$(messageId)).data.acks.toSet()
+            == getAfter(/databases/$(database)/documents/teams/$(t)/receipts/$(messageId)).data.recipients.toSet();
+      }
+      match /receipts/{messageId} {
+        allow read: if member(t);
+        allow create: if member(t) && request.resource.data.keys().hasOnly(['hash', 'senderId', 'recipients', 'acks', 'createdAt', 'kind', 'taskId'])
+          && request.resource.data.acks == [] && request.resource.data.senderId == actor() && request.resource.data.createdAt == request.time
+          && request.resource.data.hash == getAfter(/databases/$(database)/documents/teams/$(t)/events/$(messageId)).data.hash
+          && request.resource.data.recipients == header(messageId).recipients && request.resource.data.kind == header(messageId).kind && request.resource.data.taskId == header(messageId).taskId;
+        allow update: if member(t) && actor() in resource.data.recipients && !(actor() in resource.data.acks)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acks'])
+          && request.resource.data.acks == resource.data.acks.concat([actor()]);
+      }
+    }
+  }
+}
